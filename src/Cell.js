@@ -292,15 +292,33 @@ const Cell = (props) => {
                             </Dropdown.Item>
                             <Dropdown.Item
                             onClick={() => {
-                                const variableName = prompt("Enter variable name:");
-                                if (variableName) {
-                                    const loopLimit = prompt("Enter loop limit:");
-                                    if (loopLimit) {
-                                        const code = `for (let ${variableName} = 0; ${variableName} < ${loopLimit}; ${variableName}++) {\n  \n}\n`;
-                                        insert_text(code);
-                                    }
-                                }
-                            }}
+                                const variableNames = prompt("Enter variable names (space-separated):");
+                                if (variableNames) {
+                                    const variables = variableNames.split(" ").filter(name => name.trim() !== "");
+                                    if (variables.length > 0) {
+                                        const loopLimit = prompt("Enter loop limit:");
+                                        if (loopLimit) {
+                                            const generateNestedLoop = (vars, limit, indent = 0) => {
+                                                if (vars.length === 0) {
+                                                    return " ".repeat(indent) + "\n" ;
+                                                }
+                                                const currentVar = vars[0];
+                                                const remainingVars = vars.slice(1);
+                                                return (
+                                                    " ".repeat(indent) +
+                                                    `for (let ${currentVar} = 0; ${currentVar} < ${limit}; ${currentVar}++) {\n` +
+                                                    generateNestedLoop(remainingVars, limit, indent + 2) +
+                                                    " ".repeat(indent) +
+                                                    `}\n`
+                                                );
+                                             };
+                    
+                                            const code = generateNestedLoop(variables, loopLimit);
+                                                insert_text(code);
+                                            }
+                                        }
+                                    }              
+                                }}
                             >
                                 for
                             </Dropdown.Item>
@@ -339,43 +357,194 @@ const Cell = (props) => {
                                 )}
                                 {modalType === 'operator' && (
                                     <>
+                                        <Button variant="primary" onClick={() => handleInsert('=')} className="m-2">
+                                            =
+                                        </Button>
                                         <Button variant="primary" onClick={() => handleInsert('+')} className="m-2">
                                             +
                                         </Button>
-                                        <Button variant="secondary" onClick={() => handleInsert('-')} className="m-2">
+                                        <Button variant="primary" onClick={() => handleInsert('-')} className="m-2">
                                             -
                                         </Button>
-                                        <Button variant="danger" onClick={() => handleInsert('*')} className="m-2">
+                                        <Button variant="primary" onClick={() => handleInsert('*')} className="m-2">
                                             *
                                         </Button>
-                                        <Button variant="info" onClick={() => handleInsert('/')} className="m-2">
+                                        <Button variant="primary" onClick={() => handleInsert('/')} className="m-2">
                                             /
                                         </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('%')} className="m-2">
+                                            %
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('**')} className="m-2">
+                                            **
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('==')} className="m-2">
+                                            ==
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('!=')} className="m-2">
+                                            !=
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('>=')} className="m-2">
+                                            {'>='}
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('>')} className="m-2">
+                                            {'>'}
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('<=')} className="m-2">
+                                            {'<='}
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('<')} className="m-2">
+                                            {'<'}
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('!')} className="m-2">
+                                            !
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('&&')} className="m-2">
+                                            &&
+                                        </Button>
+                                        <Button variant="primary " onClick={() => handleInsert('||')} className="m-2">
+                                            ||
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert(' ? : ')} className="m-2">
+                                            ? :
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('~')} className="m-2">
+                                            ~
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('$')} className="m-2">
+                                            $
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('_')} className="m-2">
+                                            _
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('=>')} className="m-2">
+                                            {'=>'}
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('()')} className="m-2">
+                                            ()
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('[]')} className="m-2">
+                                            []
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('{}')} className="m-2">
+                                            {'{}'}
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('<>')} className="m-2">
+                                            {'<>'}
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert("''")} className="m-2">
+                                            ''
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('""')} className="m-2">
+                                            ""
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('/* */')} className="m-2">
+                                            /* comment */
+                                        </Button>
+                
                                     </>
                                 )}
                                 {modalType === 'syntax' && (
                                     <>
-                                        <Button variant="primary" onClick={() => handleInsert('for (let i = 0; i < 10; i++) {\n  \n}\n')} className="m-2">
-                                            for loop
+                                        <Button variant="primary" onClick={() => handleInsert('// ')} className="m-2">
+                                            comment
                                         </Button>
-                                        <Button variant="secondary" onClick={() => handleInsert('while () {\n  \n}\n')} className="m-2">
-                                            while loop
+                                        <Button variant="primary" onClick={() => handleInsert('/* ')} className="m-2">
+                                            comment start
                                         </Button>
-                                        <Button variant="danger" onClick={() => handleInsert('switch(expression) {\n  case x:\n    // code\n    break;\n  default:\n    // code\n}\n')} className="m-2">
-                                            switch
+                                        <Button variant="primary" onClick={() => handleInsert(' */')} className="m-2">
+                                            comment end
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('true')} className="m-2">
+                                            true
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('false')} className="m-2">
+                                            false
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('var')} className="m-2">
+                                            var
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('while(true){\n\t\n}')} className="m-2">
+                                            while
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('{\n\t\n}')} className="m-2">
+                                            block
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('break')} className="m-2">
+                                            break
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('continue')} className="m-2">
+                                            continue
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('function()')} className="m-2">
+                                            function
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('let')} className="m-2">
+                                            let
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('const')} className="m-2">
+                                            const
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('(x, y) => x+y')} className="m-2">
+                                            arrow
                                         </Button>
                                     </>
                                 )}
                                 {modalType === 'snippet' && (
                                     <>
-                                        <Button variant="primary" onClick={() => handleInsert('console.log("Hello, World!");')} className="m-2">
+                                        <Button variant="primary" onClick={() => handleInsert('console.log();')} className="m-2">
                                             console.log
                                         </Button>
-                                        <Button variant="secondary" onClick={() => handleInsert('document.getElementById("myElement");')} className="m-2">
-                                            getElementById
+                                        <Button variant="primary" onClick={() => handleInsert('alert();')} className="m-2">
+                                            alert
                                         </Button>
-                                        <Button variant="danger" onClick={() => handleInsert('setTimeout(() => {\n  \n}, 1000);')} className="m-2">
-                                            setTimeout
+                                        <Button variant="primary" onClick={() => handleInsert('confirm();')} className="m-2">
+                                            confirm
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('prompt();')} className="m-2">
+                                            prompt
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('JSON.stringify()')} className="m-2">
+                                            JSON.stringify
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('performance.now()')} className="m-2">
+                                            performance
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('Marh.floor(Math.random() * 100)')} className="m-2">
+                                            random 0..99
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('Marh.floor(Math.random() * 6 + 1)')} className="m-2">
+                                            random1..6
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('Math.ceil()')} className="m-2">
+                                            ceil
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('Math.floor()')} className="m-2">
+                                            floor
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('Math.sqrt()')} className="m-2">
+                                            sqrt
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('[a,b].includes(c)')} className="m-2">
+                                            c is in [a,b]
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('c == a || c == b')} className="m-2">
+                                            c is a or b
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('c !=a && c !==b')} className="m-2">
+                                            c is not a or b
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('d !=a && d !=b && d !=c')} className="m-2">
+                                            d != a,b,c
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('0 < x && x < 100')} className="m-2">
+                                            {'0 < x < 100'}
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('[0,1,2,3,4,5,6,7,8,9]')} className="m-2">
+                                            [0..9]
+                                        </Button>
+                                        <Button variant="primary" onClick={() => handleInsert('[1,2,3,4,5,6,7,8,9,10]')} className="m-2">
+                                            [1..10]
                                         </Button>
                                     </>
                                 )}
