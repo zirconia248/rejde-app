@@ -10,6 +10,7 @@
     "bootstrap": "^5.3.3",
     "html-react-parser": "^5.1.15",
     "js-beautify": "^1.15.1",
+    "microcms-js-sdk": "^3.1.2",
     "react": "^18.3.1",
     "react-ace": "^12.0.0",
     "react-bootstrap": "^2.10.4",

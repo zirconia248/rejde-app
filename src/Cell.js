@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Form, Button, Dropdown, ButtonGroup, Toast, Modal } from 'react-bootstrap';
+import { createClient } from 'microcms-js-sdk';
 import HTMLReactParser from 'html-react-parser'; 
 import beautify from 'js-beautify';
 import AceEditor from 'react-ace'; 
@@ -26,6 +27,7 @@ const Cell = (props) => {
         help: "help" in props ? props.help : false,
     };
 
+    
     const [name, setName] = useState(mystate.name);
     const [code, setCode] = useState(mystate.code);
     const [output, setOutput] = useState(mystate.output);
@@ -35,58 +37,88 @@ const Cell = (props) => {
     const [showModal, setShowModal] = useState(false);
     const [modalType, setModalType] = useState('');
     const form = useRef(null);
+    const editorRef = useRef(null);
+    const [localKeys, setLocalKeys] = useState([]);
+
+    
 
     useEffect(() => {
         onChange({ id, name, code, output, console, help });
     }, [code, output, console]);
 
+    useEffect(() => {
+        updateLocalKeys();
+      }, []);
+
     const up = onUp;
     const down = onDown;
     const close = onClose;
 
-    const saveToLocalStorage = () => {
-        const programName = prompt("プログラムの名前を入力してください:");
-        if (programName) {
-            localStorage.setItem(programName, code);
-            alert("プログラムが保存されました！");
+    const tenant = {
+        serviceDomain: "7i7zi9r9yf",
+    apiKey: "dBYqonpIwpKScUQiWYrHiZDBii1ON6vNiA11",
+      };
+
+      const save = () => {
+        const name = prompt('タグを入力してください:');
+        if (name) {
+          localStorage.setItem(name, code);
+          alert(`データを保存しました: ${name}`);
         }
-    };
-
-    const loadFromLocalStorage = () => {
-        const programName = prompt("読み込みたいプログラムの名前を入力してください:");
-        const savedCode = localStorage.getItem(programName);
-        if (savedCode) {
-            setCode(savedCode);
-            alert("プログラムがロードされました！");
-        } else {
-            alert("指定されたプログラムが見つかりません。");
+      };
+    
+      const loadAll = () => {
+        const client = createClient(tenant);
+        client
+          .getAllContents({ endpoint: 'codes' })
+          .then((json) => {
+            json.forEach((item) => {
+              localStorage.setItem(item.name, item.code);
+            });
+            alert('すべてのデータをロードし、ローカルストレージに保存しました。');
+            updateLocalKeys();
+          })
+          .catch((err) => {
+            console.error(err);
+            alert('データのロードに失敗しました。');
+          });
+      };
+    
+      const updateLocalKeys = () => {
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key) keys.push(key);
         }
-    };
-
-    const listLocalStorage = () => {
-        const keys = Object.keys(localStorage);
-        if (keys.length === 0) {
-            alert("保存されたプログラムがありません。");
-        } else {
-            alert("保存されているプログラム一覧:\n" + keys.join("\n"));
+        setLocalKeys(keys.sort());
+      };
+    
+      const list = () => {
+        updateLocalKeys();
+      };
+    
+      const forget = () => {
+        const name = prompt('削除するタグを入力してください:');
+        if (name) {
+          localStorage.removeItem(name);
+          alert(`データを削除しました: ${name}`);
+          updateLocalKeys();
         }
-    };
+      };
+    
+      const forgetAll = () => {
+        localStorage.clear();
+        alert('すべてのデータを削除しました。');
+        setLocalKeys([]);
+      };
 
-    const deleteSelectedProgram = () => {
-        const programName = prompt("削除したいプログラムの名前を入力してください:");
-        if (programName && localStorage.getItem(programName)) {
-            localStorage.removeItem(programName);
-            alert(`プログラム "${programName}" が削除されました！`);
-        } else {
-            alert("指定されたプログラムが見つかりません。");
+      const handleItemClick = (key) => {
+        const storedCode = localStorage.getItem(key);
+        if (storedCode !== null) {
+          setCode(storedCode); 
         }
-    };
-
-    const deleteFromLocalStorage = () => {
-        localStorage.removeItem("savedProgram");
-        alert("プログラムが削除されました！");
-    };
-
+      };
+    
     const run = () => {
         if (mode === "javascript") {
             let vcon = {
@@ -199,7 +231,7 @@ const Cell = (props) => {
         const formattedCode = beautify.js(code, { indent_size: 2 }); 
         setCode(formattedCode);
     };
-
+   
     return (
         <Form id={id} key={id} ref={form}>
             <Toast show={help} onClose={toggleHelp}>
@@ -238,12 +270,11 @@ const Cell = (props) => {
                             <span className="material-symbols-outlined">folder</span>
                         </Dropdown.Toggle>
                         <Dropdown.Menu>
-                            <Dropdown.Item onClick={notInplementedYet}>tenant</Dropdown.Item>
-                            <Dropdown.Item onClick={listLocalStorage}>list</Dropdown.Item>
-                            <Dropdown.Item onClick={loadFromLocalStorage}>load</Dropdown.Item>
-                            <Dropdown.Item onClick={saveToLocalStorage}>save</Dropdown.Item>
-                            <Dropdown.Item onClick={deleteSelectedProgram}>delete</Dropdown.Item>
-                            <Dropdown.Item onClick={deleteFromLocalStorage}>delete all</Dropdown.Item>
+                            <Dropdown.Item onClick={list}>list</Dropdown.Item>
+                            <Dropdown.Item onClick={save}>save</Dropdown.Item>
+                            <Dropdown.Item onClick={forget}>delete</Dropdown.Item>
+                            <Dropdown.Item onClick={forgetAll}>delete all</Dropdown.Item>
+                            <Dropdown.Item onClick={loadAll}>load</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>   
 
@@ -609,35 +640,49 @@ const Cell = (props) => {
             <Form.Group className="mb-3" controlId={"grp-" + id + ".code"}>
                 <Form.Label>code</Form.Label>
                 <AceEditor
-                    mode={mode}          
-                    theme="monokai"           
-                    name={id + ".code"}
-                    onChange={(newCode) => setCode(newCode)}  
-                    value={code}              
-                    editorProps={{ $blockScrolling: true }}
-                    width="100%"              
-                    height="300px"            
-                    setOptions={{
-                        enableBasicAutocompletion: true,
-                        enableLiveAutocompletion: true,
-                        enableSnippets: true,
-                        showLineNumbers: true,
-                        tabSize: 2,
-                    }}
-                />
-            </Form.Group>
+          ref={editorRef}
+          mode={mode}
+          theme="monokai"
+          name="code"
+          onChange={(newCode) => setCode(newCode)} 
+          value={code} 
+          editorProps={{ $blockScrolling: true }}
+          width="100%"
+          height="300px"
+          setOptions={{
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true,
+            showLineNumbers: true,
+            tabSize: 2,
+            fontSize: 16,
+          }}
+        />
+             </Form.Group>
 
+            <Form.Group className="mb-3">
+            <Form.Label>Local Storage Items</Form.Label>
+                <ul>
+                    {localKeys.map((key, index) => (
+                        <li key={index} style={{ cursor: "pointer", color: "blue" }} onClick={() => handleItemClick(key)}>
+                            <strong>{key}</strong>
+                        </li>
+                    ))}
+                </ul>
+            </Form.Group>
             <Form.Group className="mb-3" controlId={"grp-" + id + ".output"}>
                 <Form.Label>output</Form.Label>
                 <div id={id + ".output"} name="output">{HTMLReactParser(`${output}`)}</div>
             </Form.Group>
-
+       
+           
             <Form.Group>
                 <Form.Label>console</Form.Label>
                 <div id={id + ".console"} name="console">{HTMLReactParser(`${console}`)}</div>
             </Form.Group>
         </Form>
     );
-};
+}
+
 
 export default Cell;
